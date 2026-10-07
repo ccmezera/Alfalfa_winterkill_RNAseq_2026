@@ -1,0 +1,13 @@
+#!/bin/bash
+
+for i in *.fastq
+do
+    sample=$(basename "$i" .fastq)
+
+    echo "Processing $sample"
+
+    fastp \
+        -i "$i" \
+        -o "out_${sample}.fastq"
+done
+``
