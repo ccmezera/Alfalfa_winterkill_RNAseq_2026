@@ -1,0 +1,40 @@
+#Used medsa.RegenSY27x genomes
+#Unzip the files
+gunzip *.fna.gz
+
+#Concatonate all 4 haplotypes into one
+cat *.fna > medsa_all_haplotypes.fna
+
+#Used medsa.RegenSY27 annotaions "medsa.RegenSY27x.gnm1_hap4.ann1.RNH4.mrna.fna.gz" to create index
+gunzip *.gz
+
+#Build the salmon index
+salmon index \
+    -t medsa.RegenSY27x.gnm1.ann1.BS5K.mrna.fna \
+    -i salmon_index \
+    -p 16
+
+#Loop to align and quantify fastq files to obtain a file with tpm in quant.sf
+for i in *.fastq
+do
+    sample=$(basename "$i" .fastq)
+
+    echo "Processing sample $sample"
+
+    salmon quant \
+        -i salmon_index \
+        -l A \
+        -r "$i" \
+        --validateMappings \
+        -o "salmon_${sample}"
+done
+
+#Makes quant.sf files labeled with sample names in the folder "salmon_sf"
+mkdir -p salmon_sf
+
+for dir in salmon_*
+do
+    sample=${dir#salmon_}
+
+    cp "${dir}/quant.sf" "salmon_sf/${sample}.quant.sf"
+done
